@@ -65,11 +65,8 @@ pub fn parse_interval(
 			is_subtracting = !is_subtracting;
 			bytes.skip_spaces();
 		}
-		let mut number = bytes.parse_number()?;
+		let number = bytes.parse_number()?;
 		bytes.skip_spaces();
-		if is_subtracting {
-			number *= -1;
-		}
 		for (unit_index, unit) in units.iter().enumerate().skip(unit_cursor) {
 			unit_cursor += 1;
 			if bytes.parse_regex(&unit.regex) {
@@ -78,36 +75,44 @@ pub fn parse_interval(
 					0 => {
 						let date = date.get_or_insert_with(Utc::now);
 						let offset_date = offset_date.get_or_insert(*date);
-						let number = number.unsigned_abs();
-						let number: u32 = number.try_into().map_err(|_| ParseError::Overflow)?;
-						let number = number.checked_mul(12).ok_or(ParseError::Overflow)?;
-						*offset_date = if number > 0 {
-							offset_date
-								.checked_add_months(Months::new(number))
-								.ok_or(ParseError::DateOutOfRange)?
+						let months = Months::new(
+							number
+								.checked_mul(12)
+								.ok_or(ParseError::NumberOutOfRange)?
+								.try_into()?,
+						);
+						*offset_date = if is_subtracting {
+							offset_date.checked_sub_months(months)
 						} else {
-							offset_date
-								.checked_sub_months(Months::new(number))
-								.ok_or(ParseError::DateOutOfRange)?
-						};
+							offset_date.checked_add_months(months)
+						}
+						.ok_or(ParseError::DateOutOfRange)?;
 					}
 					// Months
 					1 => {
 						let date = date.get_or_insert_with(Utc::now);
 						let offset_date = offset_date.get_or_insert(*date);
-						*offset_date = if number > 0 {
-							offset_date
-								.checked_add_months(Months::new(number as u32))
-								.ok_or(ParseError::DateOutOfRange)?
+						let months = Months::new(number.try_into()?);
+						*offset_date = if is_subtracting {
+							offset_date.checked_sub_months(months)
 						} else {
-							offset_date
-								.checked_sub_months(Months::new((-number) as u32))
-								.ok_or(ParseError::DateOutOfRange)?
-						};
+							offset_date.checked_add_months(months)
+						}
+						.ok_or(ParseError::DateOutOfRange)?;
 					}
 					// Other
 					_ => {
-						duration += Duration::seconds(number * unit.seconds);
+						duration = number
+							.checked_mul(unit.seconds)
+							.map(Duration::seconds)
+							.and_then(|d| {
+								if is_subtracting {
+									duration.checked_sub(&d)
+								} else {
+									duration.checked_add(&d)
+								}
+							})
+							.ok_or(ParseError::NumberOutOfRange)?;
 					}
 				}
 				bytes.skip_spaces();
@@ -123,7 +128,9 @@ pub fn parse_interval(
 	}
 
 	if let (Some(date), Some(offset_date)) = (date, offset_date) {
-		duration = duration.checked_add(&(offset_date - date)).ok_or(ParseError::Overflow)?;
+		duration = duration
+			.checked_add(&(offset_date - date))
+			.ok_or(ParseError::NumberOutOfRange)?;
 	}
 	Ok(duration)
 }

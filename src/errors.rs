@@ -1,3 +1,5 @@
+use std::num::TryFromIntError;
+
 use crate::{parse_bytes::ParseBytes, time_units};
 
 /// An error parsing the text, with some attempt made to be specific.
@@ -20,8 +22,8 @@ pub enum ParseError {
 	InconstantUnitWithoutDate,
 	#[error("During some step in adjusting years or months, the date became out of range")]
 	DateOutOfRange,
-	#[error("Some operation overflowed")]
-	Overflow,
+	#[error("Some operation overflowed or some number conversion failed")]
+	NumberOutOfRange,
 }
 
 impl ParseError {
@@ -40,5 +42,11 @@ impl ParseError {
 			Some(_) => Self::UnitOutOfSequence(position),
 			None => Self::NoUnit(position),
 		}
+	}
+}
+
+impl From<TryFromIntError> for ParseError {
+	fn from(_value: TryFromIntError) -> Self {
+		Self::NumberOutOfRange
 	}
 }

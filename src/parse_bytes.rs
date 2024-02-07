@@ -47,7 +47,7 @@ impl<'l> ParseBytes<'l> {
 			number = number
 				.checked_mul(10)
 				.and_then(|n| n.checked_add((byte - b'0') as i64))
-				.ok_or(ParseError::Overflow)?;
+				.ok_or(ParseError::NumberOutOfRange)?;
 		}
 		self.shrinking = &self.shrinking[highest_index..];
 		(highest_index > 0)

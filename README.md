@@ -5,7 +5,17 @@ It is faithful with regards to the variable durations of years and months. For e
 ## Usage
 
 ```rs
-/// TO-DO: code example
+let duration = parse_interval_with_now("2 days 15 hours 15 mins");
+assert_eq!(duration, Ok(chrono::Duration::seconds(227700)));
+```
+```rs
+let duration = parse_interval_with_lazy_date("1 month", || {
+	NaiveDate::from_ymd_opt(2000, 2, 1)
+		.unwrap()
+		.and_time(NaiveTime::default())
+		.and_utc()
+});
+assert_eq!(duration, Ok(chrono::Duration::days(29)));
 ```
 
 The input format is designed to be somewhat flexible, but it has a particular, opinionated set of rules.
@@ -24,6 +34,6 @@ Each unit is optional, but all present units need to be in order. All units are 
 * `minutes` can also be written as `minute`, `mins`, `min` or `m`
 * `seconds` can also be written as `second`, `secs`, `sec` or `s`
 
-A `-` can be inserted before any number to subtract all the units that follow it. Another `-` will make the following units additive again (as if subtracting from the previous subtraction). For example, "1d - 10m 30s" describes an interval 10.5 minutes short of a day. "1d - 10m -30s" describes an interval 9.5 minutes short of a day. Intervals can be negative as a whole, resulting in a negative `Duration`.
+A `-` can be inserted before any number to subtract all the units that follow it. Another `-` will make the following units additive again (as if subtracting from the previous subtraction). For example, "1d - 10m 30s" describes an interval 10.5 minutes short of a day. "1d - 10m - 30s" describes an interval 9.5 minutes short of a day. Intervals can be negative as a whole, resulting in a negative `Duration`.
 
-Because years and months vary in their actual duration, a `DateTime<Utc>` can be // TO-DO: finish sentence
+Because years and months vary in their actual duration, to process them, some date needs to be chosen as a starting point. A `DateTime<Utc>` can be supplied for this purpose, or the library can use the current system time. It is also an option to just not handle years and months at all.

@@ -158,7 +158,7 @@ const _PATTERN: &str = r"^(?:(?:(-) ?)?(\d+) ?y(?:ears?)?\s?)?(?:(?:(-) ?)?(\d+)
 
 #[cfg(test)]
 mod tests {
-	use chrono::Datelike;
+	use chrono::{NaiveDate, NaiveTime};
 
 	use super::*;
 
@@ -267,13 +267,10 @@ mod tests {
 		);
 	}
 	fn date_year_month_day(year: i32, month: u32, day: u32) -> DateTime<Utc> {
-		DateTime::<Utc>::default()
-			.with_year(year)
+		NaiveDate::from_ymd_opt(year, month, day)
 			.unwrap()
-			.with_month(month)
-			.unwrap()
-			.with_day(day)
-			.unwrap()
+			.and_time(NaiveTime::default())
+			.and_utc()
 	}
 	#[test]
 	fn leap_year_forward() {
@@ -311,5 +308,18 @@ mod tests {
 			parse_interval_with_date(interval, date),
 			parse_interval_with_lazy_date(interval, move || date)
 		);
+	}
+	#[test]
+	fn doc_examples() {
+		let duration = parse_interval_with_now("2 days 15 hours 15 mins");
+		assert_eq!(duration, Ok(chrono::Duration::seconds(227700)));
+
+		let duration = parse_interval_with_lazy_date("1 month", || {
+			NaiveDate::from_ymd_opt(2000, 2, 1)
+				.unwrap()
+				.and_time(NaiveTime::default())
+				.and_utc()
+		});
+		assert_eq!(duration, Ok(chrono::Duration::days(29)));
 	}
 }

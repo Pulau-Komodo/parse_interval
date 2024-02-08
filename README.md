@@ -5,11 +5,11 @@ It is faithful with regards to the variable durations of years and months. For e
 ## Usage
 
 ```rs
-let duration = parse_interval_with_now("2 days 15 hours 15 mins");
+let duration = parse_interval::with_now("2 days 15 hours 15 mins");
 assert_eq!(duration, Ok(chrono::Duration::seconds(227700)));
 ```
 ```rs
-let duration = parse_interval_with_lazy_date("1 month", || {
+let duration = parse_interval::with_lazy_date("1 month", || {
 	NaiveDate::from_ymd_opt(2000, 2, 1)
 		.unwrap()
 		.and_time(NaiveTime::default())

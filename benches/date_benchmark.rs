@@ -1,13 +1,13 @@
 use chrono::{Duration, Utc};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use parse_interval::{parse_interval_with_date, parse_interval_with_now, ParseError};
+use parse_interval::{with_date, with_now, ParseError};
 
 fn lazy_date(interval: &str) -> Result<Duration, ParseError> {
-	parse_interval_with_now(interval)
+	with_now(interval)
 }
 
 fn eager_date(interval: &str) -> Result<Duration, ParseError> {
-	parse_interval_with_date(interval, Utc::now())
+	with_date(interval, Utc::now())
 }
 
 fn benchmark_lazy(c: &mut Criterion) {

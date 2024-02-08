@@ -1,13 +1,13 @@
 use chrono::{Duration, Utc};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use parse_interval::{parse_interval, ParseError};
+use parse_interval::{parse_interval_with_date, parse_interval_with_now, ParseError};
 
 fn lazy_date(interval: &str) -> Result<Duration, ParseError> {
-	parse_interval(interval, None, true)
+	parse_interval_with_now(interval)
 }
 
 fn eager_date(interval: &str) -> Result<Duration, ParseError> {
-	parse_interval(interval, black_box(Some(Utc::now())), false)
+	parse_interval_with_date(interval, Utc::now())
 }
 
 fn benchmark_lazy(c: &mut Criterion) {
@@ -24,13 +24,13 @@ fn benchmark_eager(c: &mut Criterion) {
 
 fn benchmark_lazy_inconstant(c: &mut Criterion) {
 	c.bench_function("Lazy date inconstant", |b| {
-		b.iter(|| lazy_date(black_box("2 years 6 months")))
+		b.iter(|| lazy_date(black_box("2 years 6 months 10 minutes")))
 	});
 }
 
 fn benchmark_eager_inconstant(c: &mut Criterion) {
 	c.bench_function("Eager date inconstant", |b| {
-		b.iter(|| eager_date(black_box("2 years 6 months")))
+		b.iter(|| eager_date(black_box("2 years 6 months 10 minutes")))
 	});
 }
 

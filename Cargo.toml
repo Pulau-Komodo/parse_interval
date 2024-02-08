@@ -2,6 +2,11 @@
 name = "parse_interval"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Pulau-Komodo/parse_interval"
+keywords = ["time", "duration", "interval", "parsing"]
+categories = ["command-line-interface", "date-and-time", "parser-implementations"]
+description = "Parse text with a specific format into a time interval."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

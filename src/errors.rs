@@ -24,6 +24,8 @@ pub enum ParseError {
 	DateOutOfRange,
 	#[error("Some operation overflowed or some number conversion failed")]
 	NumberOutOfRange,
+	#[error("Years and months are not allowed to have fractions")]
+	InconstantUnitWithFraction,
 }
 
 impl ParseError {

@@ -79,7 +79,7 @@ fn parse_interval(
 			is_subtracting = !is_subtracting;
 			bytes.skip_spaces();
 		}
-		let number = bytes.parse_number()?;
+		let (number, fraction) = bytes.parse_number()?;
 		bytes.skip_spaces();
 		for (unit_index, unit) in units.iter().enumerate().skip(unit_cursor) {
 			unit_cursor += 1;
@@ -87,6 +87,9 @@ fn parse_interval(
 				match unit_index {
 					// Years
 					0 => {
+						if fraction > 0.0 {
+							return Err(ParseError::InconstantUnitWithFraction);
+						}
 						let date =
 							date.get_or_insert_with(|| get_date.take().map(|f| f()).unwrap());
 						let offset_date = offset_date.get_or_insert(*date);
@@ -105,6 +108,9 @@ fn parse_interval(
 					}
 					// Months
 					1 => {
+						if fraction > 0.0 {
+							return Err(ParseError::InconstantUnitWithFraction);
+						}
 						let date =
 							date.get_or_insert_with(|| get_date.take().map(|f| f()).unwrap());
 						let offset_date = offset_date.get_or_insert(*date);
@@ -118,14 +124,20 @@ fn parse_interval(
 					}
 					// Other
 					_ => {
+						let fraction_part =
+							Duration::seconds((fraction * unit.seconds as f32) as i64);
 						duration = number
 							.checked_mul(unit.seconds)
 							.map(Duration::seconds)
 							.and_then(|d| {
 								if is_subtracting {
-									duration.checked_sub(&d)
+									duration
+										.checked_sub(&d)
+										.and_then(|d| d.checked_sub(&fraction_part))
 								} else {
-									duration.checked_add(&d)
+									duration
+										.checked_add(&d)
+										.and_then(|d| d.checked_add(&fraction_part))
 								}
 							})
 							.ok_or(ParseError::NumberOutOfRange)?;
@@ -194,6 +206,34 @@ mod tests {
 	#[test]
 	fn ignore_case() {
 		assert_eq!(simple("5 WEEKS 3 days"), Ok(Duration::seconds(3283200)));
+	}
+	#[test]
+	fn fractions() {
+		assert_eq!(
+			simple("0.5 week 2.5 days 3.55 hours .5 minutes 1 second"),
+			Ok(Duration::seconds(531211))
+		);
+	}
+	/// I don't have any particular rounding behaviour in mind, but if it changes, I'd like to know.
+	#[test]
+	fn fraction_rounding() {
+		assert_eq!(simple("0.1s"), Ok(Duration::seconds(0)));
+		assert_eq!(simple("0.017m"), Ok(Duration::seconds(1)));
+	}
+	#[test]
+	fn invalid_fraction() {
+		assert_eq!(simple("0.5.0d"), Err(ParseError::NoUnit(3)));
+	}
+	#[test]
+	fn lone_period() {
+		assert_eq!(simple(".d"), Err(ParseError::NoNumber(0)));
+	}
+	#[test]
+	fn inconstant_fraction() {
+		assert_eq!(
+			with_date("0.5y", date_year_month_day(2020, 6, 20)),
+			Err(ParseError::InconstantUnitWithFraction)
+		);
 	}
 	#[test]
 	fn empty_input() {

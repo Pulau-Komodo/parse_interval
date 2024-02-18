@@ -1,4 +1,4 @@
-Parses strings like "5y6mo" and "3.5 minutes" into `chrono::Duration`s. It is intended to be a quick and simple solution for text-based user input, like for scheduling reminders or other events.
+Parses strings like "5y6mo" and "3.5 minutes" into `chrono::Duration`s. It is intended to be a quick and simple solution for text-based user input, like for scheduling reminders or specifying durations.
 
 It is faithful with regards to the variable durations of years and months. For example, starting from 2000-02-01 (February of a leap year), 1 month means 29 days, and -1 month means -31 days.
 

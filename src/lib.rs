@@ -92,8 +92,7 @@ fn parse_interval(
 						if fraction > 0.0 {
 							return Err(ParseError::InconstantUnitWithFraction);
 						}
-						let date =
-							date.get_or_insert_with(|| get_date.take().map(|f| f()).unwrap());
+						let date = date.get_or_insert_with(|| get_date.take().unwrap()());
 						let offset_date = offset_date.get_or_insert(*date);
 						let months = Months::new(
 							number
@@ -113,8 +112,7 @@ fn parse_interval(
 						if fraction > 0.0 {
 							return Err(ParseError::InconstantUnitWithFraction);
 						}
-						let date =
-							date.get_or_insert_with(|| get_date.take().map(|f| f()).unwrap());
+						let date = date.get_or_insert_with(|| get_date.take().unwrap()());
 						let offset_date = offset_date.get_or_insert(*date);
 						let months = Months::new(number.try_into()?);
 						*offset_date = if is_subtracting {

@@ -314,6 +314,13 @@ mod tests {
 		);
 	}
 	#[test]
+	fn month_forward_to_non_existent_date() {
+		assert_eq!(
+			with_date("1 month", date_year_month_day(2001, 1, 31)),
+			Ok(Duration::days(28))
+		)
+	}
+	#[test]
 	fn lazy_eager_same_outcome() {
 		let date = date_year_month_day(2000, 2, 1);
 		let interval = "1 year 3 months 15 minutes";

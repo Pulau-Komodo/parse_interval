@@ -331,10 +331,10 @@ mod tests {
 	}
 	#[test]
 	fn doc_examples() {
-		let duration = self::with_now("2 days 15 hours 15 mins");
+		let duration = super::with_now("2 days 15 hours 15 mins");
 		assert_eq!(duration, Ok(chrono::Duration::seconds(227700)));
 
-		let duration = self::with_lazy_date("1 month", || {
+		let duration = super::with_lazy_date("1 month", || {
 			NaiveDate::from_ymd_opt(2000, 2, 1)
 				.unwrap()
 				.and_time(NaiveTime::default())
